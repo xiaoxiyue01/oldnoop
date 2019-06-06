@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/mvc 
+		http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!-- 配置静态文件路径 -->
+	<mvc:resources location="/static/" mapping="/static/**"
+		cache-period="31536000" />
+	<mvc:resources location="/WEB-INF/script/" mapping="/script/**"
+		cache-period="31536000" />
+
+	<context:component-scan base-package="com.oldnoop.**.controller" />
+	
+	<mvc:interceptors>
+	<!-- 国际化操作拦截器 -->
+		<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor" >
+			<!-- 国际化语言切换请求参数 -->
+			<property name="paramName" value="locale" />
+		</bean>
+	 <!--登录状态验证拦截器  -->
+		 <!-- <bean class="com.oldnoop.interceptor.SecurityInterceptor" >
+			登录状态验证拦截器所需参数
+			<property name="excludeUrls" value="/static,/user/login,/user/doLogin,/user/logout,/user/verifycode" />
+			<property name="loginUrl" value="/user/login" />
+		</bean>  -->
+		
+	</mvc:interceptors>
+	
+	
+	<!-- 国际化信息资源文件 -->
+	<bean id="messageSource"  
+        class="org.springframework.context.support.ResourceBundleMessageSource">  
+        <!-- basename用来指定properties文件的通用名 
+        	比如message_en.properties,message_zh_CN.properties通用名都是message -->  
+        <property name="basename" value="message" />  
+        <property name="useCodeAsDefaultMessage" value="true" />  
+    </bean>  
+
+	<!-- 国际化本地区域解析器 -->
+	<bean id="localeResolver"
+		class="org.springframework.web.servlet.i18n.CookieLocaleResolver" >
+		<property name="cookieName" value="locale"/>  
+    	<property name="cookieMaxAge" value="31536000"/>  
+    	<property name="defaultLocale" value="zh_CN"/>  
+	</bean>
+		
+	<!-- 支持文件上传,使用commons-fileupload.jar -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="1024000000"></property>
+	</bean>
+
+	<!-- 日期转换,后台接值日期字符串 转换日期 -->
+	<mvc:annotation-driven conversion-service="conversionService" >
+	 <mvc:message-converters>  
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">  
+                <property name="objectMapper">  
+                    <bean class="com.fasterxml.jackson.databind.ObjectMapper">  
+                        <property name="dateFormat">  
+                        	<!-- 后台向前台返回json时, 将日期类型(java.util.Date)转换成格式化字符串
+                        		 统一配置为格式yyyy-MM-dd HH:mm:ss,
+                        		 如需要其他格式,可以在实体类日期类型的属性上加注解
+                        		 	@JsonFormat(pattern="yyyy-MM-dd")
+    								private Date birthdate;
+                        	 -->
+                            <bean class="java.text.SimpleDateFormat">  
+                                <constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss" />  
+                            </bean>  
+                        </property>  
+                    </bean>  
+                </property>  
+            </bean>  
+        </mvc:message-converters> 
+	</mvc:annotation-driven>
+	<!-- 日期转换,后台接值 日期字符串 转换成 日期类型(java.util.Date) -->
+	<bean id="conversionService"
+		class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+		<property name="converters">
+			<list>
+				<bean class="com.oldnoop.util.DateConvertor" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- view resolver 视图解析器 -->
+	<!-- jstl视图解析器 -->
+	<bean id="jspResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.JstlView" />
+		<!-- 视图页面路径的前缀 -->
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<!-- 视图页面路径的后缀 -->
+		<property name="suffix" value=".jsp" />
+		<!-- 在存在多个匹配的视图页面的情况下,优先使用order值最小的视图解析器-->
+		<property name="order" value="0" />
+	</bean>
+	
+	<!-- freemarker视图解析器 -->
+	<bean id="freemarkerResolver"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.freemarker.FreeMarkerView"></property>
+		<!-- 视图页面路径的前缀 -->
+		<property name="prefix" value="/ftl/" />
+		<!-- 视图页面路径的后缀 -->
+		<property name="suffix" value=".html" />
+		<property name="contentType" value="text/html;charset=utf-8" />
+		<property name="exposeRequestAttributes" value="true" />
+		<property name="exposeSessionAttributes" value="true" />
+		<property name="exposeSpringMacroHelpers" value="true" />
+		<property name="order" value="1" />
+	</bean>
+
+	<!-- freemarker配置 -->
+	<bean id="freemarkerConfig"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<property name="templateLoaderPath" value="/WEB-INF" />
+		<property name="freemarkerSettings">
+			<props>
+				<prop key="template_update_delay">0</prop>
+				<prop key="defaultEncoding">UTF-8</prop>
+				<prop key="url_escaping_charset">UTF-8</prop>
+				<prop key="locale">zh_CN</prop>
+				<prop key="boolean_format">true,false</prop>
+				<prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
+				<prop key="date_format">yyyy-MM-dd</prop>
+				<prop key="time_format">HH:mm:ss</prop>
+				<prop key="number_format">0.######</prop>
+				<prop key="whitespace_stripping">true</prop>
+			</props>
+		</property>
+	</bean>
+
+</beans> 

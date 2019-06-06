@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+	
+	<!-- 读取数据库连接配置的属性文件 -->
+	<bean
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:db.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 阿里 druid数据库连接池 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" 
+		init-method="init" destroy-method="close">  
+         <!-- 数据库基本信息配置 -->
+         <property name="url" value="${ds.url}" />  
+         <!-- 可配可不配,不配置按照url自动识别 -->
+         <property name="driverClassName" value="${ds.driverClassName}" />  
+         <property name="username" value="${ds.username}" />  
+         <property name="password" value="${ds.password}" />  
+         <!-- 配置初始化大小、最小、最大 -->
+         <!-- 初始化连接数量 -->
+         <property name="initialSize" value="${ds.initialSize}" />
+         <!-- 最小空闲连接数 -->
+         <property name="minIdle" value="${ds.minIdle}" />  
+   		 <!-- 最大并发连接数 -->
+         <property name="maxActive" value="${ds.maxActive}" />
+         
+         <!-- 配置获取连接等待超时的时间 -->
+         <property name="maxWait" value="${ds.maxWait}" />
+         
+   		 <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+         <property name="timeBetweenEvictionRunsMillis" value="${ds.timeBetweenEvictionRunsMillis}" />
+         <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+         <property name="minEvictableIdleTimeMillis" value="${ds.minEvictableIdleTimeMillis}" />  
+         <property name="validationQuery" value="${ds.validationQuery}" />  
+         <property name="testWhileIdle" value="${ds.testWhileIdle}" />  
+         <property name="testOnBorrow" value="${ds.testOnBorrow}" />  
+         <property name="testOnReturn" value="${ds.testOnReturn}" />
+         <!-- 监控统计 -->  
+         <property name="filters" value="${ds.filters}" />  
+         <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+         <!-- 如果用Oracle，则把poolPreparedStatements配置为true，mysql可以配置为false。
+         	分库分表较多的数据库，建议配置为false -->
+	     <property name="poolPreparedStatements" value="${ds.poolPreparedStatements}" />
+	     <property name="maxPoolPreparedStatementPerConnectionSize" 
+	     	value="${ds.maxPoolPreparedStatementPerConnectionSize}" />
+	</bean>
+	
+	<!-- 开启注解扫描 -->
+	<context:annotation-config />
+	
+	<!--配置mybatis的sqlSessionFactory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<!-- <property name="configLocation" value="classpath:mybatis-configuration.xml"/> -->
+		<!-- <property name="mapperLocations" value="classpath*:demo/ssm/**/mapper/*.xml" /> -->
+	</bean>
+
+	<!-- 配置mybatis的mapper扫描 -->
+	<bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.oldnoop.**.mapper" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	</bean>
+
+	<!-- 开启事务注解扫描-->
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true"/>
+	
+	<!-- 配置事务管理器-->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!-- 扫描业务层service实现类 -->
+	<context:component-scan base-package="com.oldnoop.**.service" />
+</beans> 
