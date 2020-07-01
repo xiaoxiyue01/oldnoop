@@ -19,7 +19,7 @@
     <spring.version>4.2.5.RELEASE</spring.version>
     <poi.version>3.11</poi.version>
     <cxf.version>2.7.10</cxf.version>
-    <mysql-connector-java.version>5.1.34</mysql-connector-java.version>
+    <mysql-connector-java.version>8.0.16</mysql-connector-java.version>
   </properties>
 
 
